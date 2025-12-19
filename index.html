@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
+  <title>LudoZone — Игровая платформа</title>
+  <style>
+    :root{
+      --bg: #000000;
+      --glass: rgba(30, 30, 30, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent: #FFD60A; /* iOS Yellow */
+      --accent-grad: linear-gradient(135deg, #FFD60A, #FF9F0A);
+      --text-primary: #F2F2F7;
+      --text-secondary: #8E8E93;
+      --success: #32D74B;
+      --danger: #FF453A;
+      --radius: 24px;
+      --radius-sm: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+    
+    html, body {
+      height: 100%; margin: 0;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 0%, rgba(255, 214, 10, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(50, 50, 200, 0.1) 0%, transparent 40%);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap {
+      max-width: 1100px; margin: 0 auto; padding: 15px;
+      padding-bottom: 40px; position: relative; z-index: 2;
+      width: 100%;
+    }
+
+    /* --- Glassmorphism Utils --- */
+    .glass-panel {
+      background: var(--glass);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* --- Header --- */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; position: sticky; top: 0; z-index: 50;
+      padding: 10px 12px; border-radius: 0 0 20px 20px;
+      transition: background 0.3s;
+    }
+    header.scrolled { background: rgba(20,20,20,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
+
+    .brand { display: flex; align-items: center; gap: 10px; }
+    
+    .logo {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--accent-grad);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; color: #000; font-size: 16px;
+      box-shadow: 0 4px 15px rgba(255, 214, 10, 0.3);
+    }
+    h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+
+    nav { display: flex; background: rgba(255,255,255,0.05); padding: 3px; border-radius: 12px; }
+    .tab {
+      padding: 6px 12px; border-radius: 9px; font-size: 13px; font-weight: 600;
+      cursor: pointer; color: var(--text-secondary); transition: 0.2s;
+    }
+    .tab.active { background: rgba(255,255,255,0.1); color: #fff; }
+
+    .top-right { display: flex; gap: 8px; align-items: center; }
+    .balance {
+      font-weight: 700; font-size: 14px; color: var(--accent);
+      background: rgba(255, 214, 10, 0.1); padding: 6px 10px; border-radius: 10px;
+    }
+    .btn-outline {
+      background: transparent; border: 1px solid rgba(255,255,255,0.15);
+      padding: 6px 10px; border-radius: 10px; color: #fff; font-size: 12px; font-weight: 600;
+    }
+
+    /* --- Games Grid & Mobile Adjustments --- */
+    .games-shell { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+    
+    .game-list { display: flex; flex-direction: column; gap: 8px; padding: 12px; height: fit-content; }
+    
+    .game-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px;
+      border-radius: 16px; cursor: pointer; transition: 0.2s;
+      background: transparent; border: 1px solid transparent;
+    }
+    .game-item.active {
+      background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.05);
+    }
+    
+    .gi-thumb {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: #2c2c2e; display: grid; place-items: center; font-size: 20px;
+    }
+    .game-item.active .gi-thumb { background: var(--accent-grad); color: #000; }
+    
+    .game-info strong { display: block; font-size: 15px; }
+    .muted { color: var(--text-secondary); font-size: 12px; }
+
+    /* --- Main Panel --- */
+    .game-panel { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 380px; text-align: center; }
+    .game-panel h2 { font-size: 28px; margin: 10px 0; color: #fff; }
+    
+    .desc {
+      margin: 15px 0; padding: 14px; border-radius: 14px;
+      background: rgba(255,255,255,0.03); font-size: 14px; color: #ccc;
+    }
+
+    .play-btn {
+      background: var(--accent-grad); border: none; padding: 16px 24px;
+      border-radius: 16px; font-weight: 700; font-size: 16px; color: #000;
+      cursor: pointer; width: 100%; box-shadow: 0 8px 20px rgba(255, 214, 10, 0.2);
+    }
+
+    .ghost { background: rgba(255,255,255,0.1); color: #fff; border:none; padding: 14px; border-radius: 16px; font-weight: 600; }
+
+    /* --- Pages --- */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .promo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .promo-card { padding: 20px; display: flex; gap: 15px; align-items: center; }
+    .promo-code { font-family: monospace; font-size: 18px; color: var(--accent); font-weight: 700; }
+
+    /* --- Modal / Bottom Sheet --- */
+    .modal {
+      position: fixed; inset: 0; z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+    }
+    .modal.show { display: flex; }
+    
+    .sheet {
+      width: 100%; max-width: 440px;
+      background: #1c1c1e; border-radius: 24px; padding: 24px;
+      position: relative;
+    }
+
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+    .option {
+      padding: 12px; text-align: center; border-radius: 12px;
+      background: rgba(255,255,255,0.05); cursor: pointer; font-weight: 600;
+      border: 2px solid transparent;
+    }
+    .option.selected { border-color: var(--accent); color: var(--accent); background: rgba(255, 214, 10, 0.1); }
+
+    .anim-area { height: 180px; display: grid; place-items: center; margin-bottom: 10px; }
+    .result-panel { font-weight: 700; padding: 12px; text-align: center; font-size: 16px; }
+
+    /* --- Mobile Responsive --- */
+    @media (max-width: 768px) {
+      .games-shell { grid-template-columns: 1fr; gap: 15px; }
+      
+      /* Список игр в горизонтальный ряд на мобилках */
+      .game-list { 
+        flex-direction: row; 
+        overflow-x: auto; 
+        padding: 8px; 
+        gap: 10px;
+        scrollbar-width: none; 
+      }
+      .game-list::-webkit-scrollbar { display: none; }
+      
+      .game-item { 
+        flex-direction: column; 
+        min-width: 100px; 
+        text-align: center; 
+        padding: 10px; 
+        gap: 6px;
+      }
+      .game-info strong { font-size: 13px; }
+      .game-info .muted { display: none; }
+      
+      .game-panel { min-height: 300px; padding: 20px; }
+      .game-panel h2 { font-size: 22px; }
+      
+      .promo-layout { grid-template-columns: 1fr; }
+      
+      /* Модалка как Bottom Sheet */
+      .modal { align-items: flex-end; }
+      .sheet { 
+        border-radius: 24px 24px 0 0; 
+        padding-bottom: 40px; 
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .top-right nav { display: none; } /* Скрываем навигацию в шапке, если мало места */
+      header { position: relative; }
+    }
+
+    /* 3D Animations */
+    .coin-wrapper { width: 100px; height: 100px; transform-style: preserve-3d; position: relative; }
+    .coin-face { position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
+    .coin-front { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #8a5a00; transform: translateZ(5px); }
+    .coin-back { background: linear-gradient(135deg, #e0e0e0, #bdbdbd); color: #444; transform: rotateY(180deg) translateZ(5px); }
+
+    .dice-scene { width: 80px; height: 80px; perspective: 600px; }
+    .dice-cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+    .dice-face { position: absolute; width: 80px; height: 80px; background: #fff; border-radius: 12px; display: grid; place-items: center; font-size: 30px; color: #333; }
+    .df-1 { transform: rotateY(0deg) translateZ(40px); }
+    .df-2 { transform: rotateY(90deg) translateZ(40px); }
+    .df-3 { transform: rotateY(180deg) translateZ(40px); }
+    .df-4 { transform: rotateY(-90deg) translateZ(40px); }
+    .df-5 { transform: rotateX(90deg) translateZ(40px); }
+    .df-6 { transform: rotateX(-90deg) translateZ(40px); }
+    @keyframes rollDice { 0% { transform: rotateX(0) rotateY(0); } 100% { transform: rotateX(720deg) rotateY(360deg); } }
+    .dice-cube.rolling { animation: rollDice 1s infinite linear; }
+
+    .chest-box { width: 120px; height: 80px; background: #8B4513; border-radius: 8px; position: relative; }
+    .chest-lid { position: absolute; top: -20px; width: 120px; height: 30px; background: #A0522D; border-radius: 8px 8px 0 0; transform-origin: bottom; transition: 0.5s; }
+    .chest-content { position: absolute; top: 20%; left: 40%; font-size: 40px; opacity: 0; transition: 0.5s; }
+
+    /* Loader */
+    .loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="wrap" id="app">
+    <header id="mainHeader">
+      <div class="brand">
+        <div class="logo">LZ</div>
+        <h1>LudoZone</h1>
+      </div>
+      <div class="top-right">
+        <div class="balance" id="balance">0 ₽</div>
+        <button class="btn-outline" id="withdrawBtn">Вывод</button>
+      </div>
+    </header>
+
+    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <nav>
+          <div class="tab active" data-page="games">Игры</div>
+          <div class="tab" data-page="promo">Промо</div>
+        </nav>
+    </div>
+
+    <section class="page active" id="games">
+      <div class="games-shell">
+        <div class="glass-panel game-list" id="gameList"></div>
+        <div class="glass-panel game-panel" id="gamePanel"></div>
+      </div>
+    </section>
+
+    <section class="page" id="promo">
+      <div class="promo-layout">
+        <div class="glass-panel promo-card">
+          <div style="flex:1">
+            <h3 style="margin:0 0 5px 0">Бонус</h3>
+            <div class="muted">Введите код:</div>
+            <div style="display:flex; gap:8px; margin-top:10px">
+              <input id="promoInput" type="text" placeholder="Код" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); padding:12px; border-radius:12px; color:#fff;" />
+              <button class="play-btn" style="width:auto; padding:0 20px" id="promoBtn">OK</button>
+            </div>
+          </div>
+        </div>
+        <div class="glass-panel promo-card">
+           <div>
+             <small class="muted">Ваш код</small>
+             <div class="promo-code">new2025</div>
+             <div id="promoState"></div>
+           </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal" id="modal">
+      <div class="sheet">
+        <h3 id="mTitle" style="margin:0; text-align:center">Ставка</h3>
+        <p class="muted" style="text-align:center; margin: 5px 0 15px 0;" id="mDesc">x1.5</p>
+        
+        <div class="anim-area" id="animArea"></div>
+        <div class="result-panel" id="mResult">Выберите исход</div>
+
+        <div class="options-grid" id="mOptions"></div>
+
+        <div style="margin-top:10px">
+           <input id="mBet" type="number" placeholder="Сумма ₽" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:16px; border-radius:14px; color:#fff; font-size:18px; text-align:center" />
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px">
+          <button class="ghost" style="flex:1" id="mClose">Отмена</button>
+          <button class="play-btn" style="flex:1" id="mPlay">Играть</button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="confetti" style="position:fixed; inset:0; pointer-events:none; z-index:999"></div>
+  </div>
+
+  <script>
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => document.querySelectorAll(q);
+    const fmt = (n) => Math.floor(n).toLocaleString() + ' ₽';
+    
+    const KEY = 'ludozone_v3_ios';
+    const DEFAULT = { balance: 0, promo: false, hadFirstWin: false }; 
+    let S = { ...DEFAULT };
+    try { const s = localStorage.getItem(KEY); if (s) S = JSON.parse(s); } catch (e) {}
+
+    const games = [
+      { id: 'coin', name: 'Монетка', thumb: '🪙', desc: 'Ставьте на Орёл или Решку. Коэффициент x1.5.', options: ['Орёл', 'Решка'] },
+      { id: 'dice', name: 'Кубик', thumb: '🎲', desc: 'Ставьте на Чёт или Нечёт. Коэффициент x1.5.', options: ['Чёт', 'Нечёт'] },
+      { id: 'treasure', name: 'Сундук', thumb: '💎', desc: 'Угадайте, где лежит алмаз. Коэффициент x1.5.', options: ['Левый', 'Правый'] }
+    ];
+
+    window.onload = () => {
+       setTimeout(() => { $('#loader').style.opacity = '0'; setTimeout(()=>$('#loader').remove(), 500); }, 600);
+       render();
+    };
+
+    function save() { 
+      localStorage.setItem(KEY, JSON.stringify(S)); 
+      $('#balance').innerText = fmt(S.balance);
+      if($('#miniBalance')) $('#miniBalance').innerText = fmt(S.balance);
+      $('#promoState').innerHTML = S.promo ? '<span style="color:var(--success)">Активен</span>' : '';
+    }
+
+    function render() {
+      save();
+      const list = $('#gameList'); list.innerHTML = '';
+      games.forEach((g, i) => {
+        const el = document.createElement('div');
+        el.className = 'game-item' + (i === 0 ? ' active' : '');
+        el.innerHTML = `<div class="gi-thumb">${g.thumb}</div><div class="game-info"><strong>${g.name}</strong><div class="muted">Играть</div></div>`;
+        el.onclick = () => selectGame(i);
+        list.appendChild(el);
+      });
+      selectGame(0);
+    }
+
+    function selectGame(i) {
+      const g = games[i];
+      $$('.game-item').forEach((el, idx) => el.classList.toggle('active', idx === i));
+      $('#gamePanel').innerHTML = `
+        <div style="font-size:60px; margin-bottom:10px">${g.thumb}</div>
+        <h2>${g.name}</h2>
+        <div class="desc">${g.desc}</div>
+        <button class="play-btn" id="openPlay">Играть</button>
+      `;
+      $('#openPlay').onclick = () => openModal(g);
+    }
+
+    let currentGame = null, selectedOption = null;
+    function openModal(game) {
+      currentGame = game; selectedOption = null;
+      $('#mTitle').innerText = game.name;
+      $('#mResult').innerText = 'Выберите исход';
+      $('#mResult').style.color = '#8E8E93';
+      
+      const opts = $('#mOptions'); opts.innerHTML = '';
+      game.options.forEach(opt => {
+        const btn = document.createElement('div'); btn.className = 'option'; btn.innerText = opt;
+        btn.onclick = () => { $$('.option').forEach(o => o.classList.remove('selected')); btn.classList.add('selected'); selectedOption = opt; };
+        opts.appendChild(btn);
+      });
+      
+      resetAnim(game.id);
+      $('#modal').classList.add('show');
+    }
+
+    function resetAnim(id) {
+      const area = $('#animArea');
+      if(id === 'coin') area.innerHTML = `<div class="coin-wrapper" id="coin3d"><div class="coin-face coin-front">О</div><div class="coin-face coin-back">Р</div></div>`;
+      else if(id === 'dice') area.innerHTML = `<div class="dice-scene"><div class="dice-cube" id="dice3d"><div class="dice-face df-1">1</div><div class="dice-face df-2">2</div><div class="dice-face df-3">3</div><div class="dice-face df-4">4</div><div class="dice-face df-5">5</div><div class="dice-face df-6">6</div></div></div>`;
+      else area.innerHTML = `<div class="chest-box"><div class="chest-lid" id="cLid"></div><div class="chest-content" id="cCnt">💎</div></div>`;
+    }
+
+    $('#mPlay').onclick = () => {
+      const bet = parseInt($('#mBet').value);
+      if (!selectedOption || !bet || bet <= 0 || bet > S.balance) { alert('Проверьте ставку и выбор!'); return; }
+
+      S.balance -= bet; save();
+      $('#mResult').innerText = 'Крутим...';
+      
+      const forceWin = !S.hadFirstWin;
+      const forceLose = S.balance > 1000;
+      if(forceWin) S.hadFirstWin = true;
+
+      if(currentGame.id === 'coin') {
+        const coin = $('#coin3d');
+        const win = forceWin || (Math.random() > 0.5 && !forceLose);
+        const target = (win ? (selectedOption==='Орёл'?0:180) : (selectedOption==='Орёл'?180:0));
+        coin.style.transition = 'transform 2s cubic-bezier(0.15, 0.5, 0.15, 1)';
+        coin.style.transform = `rotateY(${1800 + target}deg)`;
+        setTimeout(() => finalize(win, bet), 2100);
+      } 
+      else if(currentGame.id === 'dice') {
+        const dice = $('#dice3d');
+        dice.classList.add('rolling');
+        const win = forceWin || (Math.random() > 0.5 && !forceLose);
+        setTimeout(() => {
+          dice.classList.remove('rolling');
+          finalize(win, bet);
+        }, 1500);
+      }
+      else {
+        const win = forceWin || (Math.random() > 0.5 && !forceLose);
+        $('#cLid').style.transform = 'rotateX(-110deg)';
+        if(win) $('#cCnt').style.opacity = '1';
+        setTimeout(() => finalize(win, bet), 1000);
+      }
+    };
+
+    function finalize(win, bet) {
+      if(win) {
+        const prize = Math.floor(bet * 1.5);
+        S.balance += prize;
+        $('#mResult').innerText = 'Победа! +' + prize + ' ₽';
+        $('#mResult').style.color = 'var(--success)';
+      } else {
+        $('#mResult').innerText = 'Проигрыш';
+        $('#mResult').style.color = 'var(--danger)';
+      }
+      save();
+    }
+
+    $('#mClose').onclick = () => $('#modal').classList.remove('show');
+
+    $('#promoBtn').onclick = () => {
+      const v = $('#promoInput').value.trim();
+      if(v === 'admin2428') { S.balance += 1000; alert('Бонус 1000 ₽'); save(); }
+      else if(v === 'new2025' && !S.promo) { S.balance += 300; S.promo = true; alert('Бонус 300 ₽'); save(); }
+      else alert('Ошибка');
+    };
+
+    $('#withdrawBtn').onclick = () => {
+      const a = prompt('Сумма (мин 1000):');
+      if(a >= 1000 && a <= S.balance) { S.balance -= a; save(); alert('Заявка создана'); }
+    };
+
+    $$('.tab').forEach(t => t.onclick = () => {
+       $$('.tab').forEach(x => x.classList.remove('active'));
+       t.classList.add('active');
+       $$('.page').forEach(p => p.classList.remove('active'));
+       $('#' + t.dataset.page).classList.add('active');
+    });
+  </script>
+</body>
+  </html>
+  
